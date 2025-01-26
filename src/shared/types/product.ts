@@ -20,6 +20,9 @@ export type Product= {
   }
   
   export type ProductResponse={
+    price: any;
+    name: any;
+    id: any;
     success: boolean;
     data?: Product | Product[];
     error?: string;

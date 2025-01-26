@@ -1,28 +1,42 @@
 import 'reflect-metadata';
 import express from 'express';
-import { AppDataSource } from './config/database'; 
-import productRoutes from './routes/product-routes'; // Tus rutas
+import path from 'path';
+import { AppDataSource } from './config/database';
+import productRoutes from './routes/product-routes';
+import dotenv from 'dotenv';
+dotenv.config();
 
-// Crear una instancia de la aplicación
 const app = express();
+const PORT = process.env.PORT || 3001;
 
-// Middlewares
-app.use(express.json()); // Para manejar JSON en las solicitudes
+// Middleware para JSON
+app.use(express.json());
 
 // Rutas
-app.use('/api', productRoutes); // Ruta base para los endpoints
+app.use('/api', productRoutes);
 
-// Puerto del servidor (leer desde el archivo .env o usar 3001 por defecto)
-const PORT = process.env.PORT || 3001;
+// Archivos estáticos
+app.use(express.static(path.join(__dirname, '../../client/build')));
+
+// Manejar rutas no definidas en la API
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ message: 'Endpoint no encontrado' });
+});
+
+// Redirigir todo lo demás al cliente React
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../client/build/index.html'));
+});
 
 // Inicializar el servidor
 const startServer = async () => {
   try {
-    // Inicializar la conexión a la base de datos
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL no está definida');
+    }
+
     await AppDataSource.initialize();
     console.log('Conexión exitosa a la base de datos');
-
-    // Iniciar el servidor
     app.listen(PORT, () => {
       console.log(`Servidor ejecutándose en http://localhost:${PORT}`);
     });
