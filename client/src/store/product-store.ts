@@ -11,19 +11,20 @@ type Product = {
 };
 
 type ProductStore = {
-    product: Product;
+    product: Product | null;
+    isEditing: boolean; // 🔹 Nuevo estado para saber si está en modo edición
     setProduct: (product: Product) => void;
+    resetProduct: () => void;
 };
 
 export const useProductStore = create<ProductStore>((set) => ({
-    product: {
-        id: 0,
-        name: "",
-        description: "",
-        price: 0,
-        stock: 0,
-        createdAt: new Date(),
-        updatedAt: new Date()
-    },
-    setProduct: (product) => set({ product }),
+    product: null, // 🔹 Por defecto, no hay producto seleccionado
+    isEditing: false, // 🔹 No estamos en edición al iniciar
+
+    setProduct: (product) => set({ product, isEditing: true }), // 🔹 Se activa modo edición
+
+    resetProduct: () => set({
+        product: null, // 🔹 Se limpia el producto
+        isEditing: false // 🔹 Se vuelve a modo creación
+    })
 }));

@@ -2,28 +2,36 @@ import { useDeleteProduct } from "../helpers/request-delete-product";
 import { useGetProduct } from "../helpers/request-get-product";
 import { useGetOneProduct } from "../helpers/request-getone-product";
 import { Product } from "../helpers/types/types";
+import { useState } from "react";
+import { useProductStore } from "../store/product-store";
 
 
 function TableProducts() { 
-  const {data,isLoading} = useGetProduct() 
-  const {fetchProduct} = useGetOneProduct()
-  const { mutate } = useDeleteProduct() 
+  const  [id, setId] = useState<number>(0);
+  const { data, isLoading } = useGetProduct();
+  const {data:producto,refetch}= useGetOneProduct(id );
+  const { mutate } = useDeleteProduct();
+
+  const setProduct = useProductStore((state) => state.setProduct);
+
+  setProduct(producto);
 
 
-  
-    
-    // Función para editar un producto
-    const editProduct = (id:number) => {
-      // Aquí se implementa la lógica para editar un producto
-      console.log("Editar producto con id:", id);
-      fetchProduct(id);
-    
-    };
-    
-    // Función para eliminar un producto
-    const deleteProduct = (id:number) => {
-      mutate(id)
-    };
+
+  console.log("data de producto",producto);
+
+
+  // Función para editar un producto
+  const editProduct = (id: number) => {
+    setId(id);
+    refetch();
+  };
+
+  // Función para eliminar un producto
+  const deleteProduct = (id: number) => {
+    mutate(id);
+  };
+
 
   return ( <>
       <table>

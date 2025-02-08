@@ -1,43 +1,30 @@
+import { useQuery } from "@tanstack/react-query";
 import apiProducts from "../api/api";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useProductStore } from "../store/product-store";
 
 
 
-
-export const useGetOneProduct = () => {
-    console.log("useGetOneProduct");
+export const useGetOneProduct = (id: number) => {
     const setProduct = useProductStore((state) => state.setProduct);
-    const queryClient = useQueryClient();
 
     const { data, isLoading, error, refetch } = useQuery({
-        queryKey: ["product-by-id"],
-        queryFn: async ({ queryKey }) => {
-            const id = queryKey[1]; // Extrae el ID de la queryKey
-            if (!id) throw new Error("ID no proporcionado");
-            const response = await apiProducts.get(`/products/${id}`);
-            console.log("product1",response.data.products);
-            setProduct(response.data);
-            return response.data;
+        queryKey: ["product-by-id", id], 
+        queryFn: async () => {
+            try {
+                const response = await apiProducts.get(`/products/${id}`);
+                const product = response?.data?.data ?? null; // Acceder a la clave correcta
+                if (product) setProduct(product); 
+                return product; 
+            } catch (error) {
+                console.error("Error al obtener el producto:", error);
+                return null; // Evita retornar `undefined`
+            }
         },
-        enabled: false, // La consulta NO se ejecuta automáticamente
+        enabled: !!id, // Solo ejecuta la consulta si hay un ID válido
         retry: 2,
         refetchOnWindowFocus: false,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["products"] });
-        },
-        onError: (error: Error) => {
-            console.error("Error al obtener el producto:", error);
-        },
+        onError: (error: Error) => console.error("Error al obtener el producto:", error),
     });
 
-    // Función manual para obtener un producto por ID
-    const fetchProduct = async (id: number) => {
-        if (id > 0) {
-            queryClient.setQueryData(["product-by-id"], id);
-            await refetch();
-        }
-    };
-
-    return { data, isLoading, error, fetchProduct };
+    return { data, isLoading, error, refetch };
 };
